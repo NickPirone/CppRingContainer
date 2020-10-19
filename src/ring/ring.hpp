@@ -21,6 +21,8 @@ public:
 
 	//ring::iterator class:
 	class iterator {
+	public:
+		iterator(ring& data, size_type index) : mData(data), mIndex(index) {}
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
 		using difference_type = std::ptrdiff_t;
@@ -28,11 +30,47 @@ public:
 		using reference = T&;
 		
 		iterator& operator++() {
-			
+			mIndex++;
+			return *this;
+		}
+		iterator& operator++(int val) {
+			mIndex++;
+			return *this;
 		}
 		iterator& operator--() {
-			
+			mIndex--;
+			return *this;
 		}
+		iterator& operator+=(size_type val) {
+			mIndex += val;
+			return *this;
+		}
+		iterator& operator-=(size_type val) {
+			mIndex -= val;
+			return *this;
+		}
+		iterator operator+(size_type val) const {
+			return iterator(mData, mIndex + val);
+		}
+		iterator operator-(size_type val) const {
+			return iterator(mData, mIndex - val);
+		}
+		reference operator*() {
+			return mData.at(mIndex);
+		}
+		reference operator->() {
+			return mData.at(mIndex);
+		}
+		bool operator==(const iterator& rhs) const {
+			return &(mData) == &(rhs.mData) && mIndex == rhs.mIndex;
+		}
+		bool operator!=(const iterator& rhs) const {
+			return !operator==(rhs);
+		}
+		
+	private:
+		ring& mData;
+		size_type mIndex = 0;
 	};
 
 	using const_iterator = const iterator;
@@ -55,15 +93,20 @@ public:
 	}
 	
 //iterators
-/*
+
 	iterator begin() {
+		return iterator(*this, 0);
 	}
 	const_iterator begin() const {
+		return const_iterator(*this, 0);
 	}
 	iterator end() {
+		return iterator(*this, mConstructedSize);
 	}
 	const_iterator end() const {
+		return const_iterator(*this, mConstructedSize);
 	}
+	/*
 	reverse_iterator rbegin() {
 	}
 	const_reverse_iterator rbegin() const {
@@ -72,7 +115,7 @@ public:
 	}
 	const_reverse_iterator rend() const {
 	}
-*/
+	*/
 	
 //operators:
 	ring& operator=(const ring& other) = default;
@@ -149,7 +192,7 @@ private:
 */
 		size_type relativeIndex = getFirstElementIndex() + clientIndex; // 7 or 4.
 		if (relativeIndex >= S) relativeIndex -= S; //2 or 4.  good.
-		std::cout << "client Index = " << clientIndex << ", relativeIndex= " << relativeIndex << std::endl;
+		//std::cout << "client Index = " << clientIndex << ", relativeIndex= " << relativeIndex << std::endl;
 		return relativeIndex;
 	}
 
