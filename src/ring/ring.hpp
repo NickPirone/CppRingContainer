@@ -2,6 +2,7 @@
 #define RING_H
 
 #include <memory>
+#include <cstring>
 #include <iostream>
 
 namespace np {
@@ -22,12 +23,12 @@ public:
 	//ring::iterator class:
 	class iterator {
 	public:
-		iterator(ring& data, size_type index) : mData(data), mIndex(index) {}
+		iterator(pointer data, size_type startIndex, size_type accessIndex) : mData(data), mStartIndex(startIndex), mIndex(accessIndex) {}
 		using iterator_category = std::random_access_iterator_tag;
-		using value_type = T;
+		using value_type = value_type;
 		using difference_type = std::ptrdiff_t;
-		using pointer = T*;
-		using reference = T&;
+		using pointer = pointer;
+		using reference = reference;
 		
 		iterator& operator++() {
 			mIndex++;
@@ -56,21 +57,22 @@ public:
 			return iterator(mData, mIndex - val);
 		}
 		reference operator*() {
-			return mData.at(mIndex);
+			return (mStartIndex + mIndex < S) ? mData[mIndex] : mData[mStartIndex + mIndex - S];
 		}
 		reference operator->() {
-			return mData.at(mIndex);
+			return operator*();
 		}
 		bool operator==(const iterator& rhs) const {
-			return &(mData) == &(rhs.mData) && mIndex == rhs.mIndex;
+			return mData == rhs.mData && mIndex == rhs.mIndex && mStartIndex == rhs.mStartIndex;
 		}
 		bool operator!=(const iterator& rhs) const {
 			return !operator==(rhs);
 		}
 		
 	private:
-		ring& mData;
-		size_type mIndex = 0;
+		pointer mData;
+		size_type mStartIndex;
+		size_type mIndex;
 	};
 
 	using const_iterator = const iterator;
@@ -79,32 +81,54 @@ public:
 
 private:
 	using ALLOCATOR_TRAITS = std::allocator_traits<Allocator>;
-	static constexpr size_t MEMORY_SIZE = sizeof(T) * S;
+	static constexpr size_t MEMORY_SIZE = sizeof(T);
 public:
 
 //constructors:
+	//default c'tor
 	ring(const allocator_type& allocator = allocator_type()) : mAllocator(allocator) {
 		mElements = ALLOCATOR_TRAITS::allocate(mAllocator, MEMORY_SIZE);
+	}
+	//copy c'tor
+	ring(const ring& other) {
+		mAllocator = other.mAllocator;
+		mConstructedSize = other.mConstructedSize;
+		mFirstElementIndex = other.mFirstElementIndex;
+		mElements = ALLOCATOR_TRAITS::allocate(mAllocator, MEMORY_SIZE);
+		memcpy(mElements, other.mElements, mConstructedSize * sizeof(T));
+	}
+	//move c'tor
+	ring(ring&& other) {
+		mAllocator = other.mAllocator;
+		mConstructedSize = other.mConstructedSize;
+		mFirstElementIndex = other.mFirstElementIndex;
+		{
+			//swap pointers
+			mElements = other.mElements;
+			other.mElements = nullptr;
+		}
 	}
 	
 //destructor:
 	~ring() {
-		ALLOCATOR_TRAITS::deallocate(mAllocator, mElements, MEMORY_SIZE);
+		if (mElements != nullptr) {
+			ALLOCATOR_TRAITS::deallocate(mAllocator, mElements, MEMORY_SIZE);
+		}
 	}
 	
 //iterators
 
 	iterator begin() {
-		return iterator(*this, 0);
+		return iterator(mElements, mFirstElementIndex, mFirstElementIndex);
 	}
 	const_iterator begin() const {
-		return const_iterator(*this, 0);
+		return const_iterator(mElements, mFirstElementIndex, mFirstElementIndex);
 	}
 	iterator end() {
-		return iterator(*this, mConstructedSize);
+		return iterator(mElements, mFirstElementIndex, mFirstElementIndex + mConstructedSize);
 	}
 	const_iterator end() const {
-		return const_iterator(*this, mConstructedSize);
+		return const_iterator(mElements, mFirstElementIndex, mFirstElementIndex + mConstructedSize);
 	}
 	/*
 	reverse_iterator rbegin() {
@@ -118,8 +142,27 @@ public:
 	*/
 	
 //operators:
-	ring& operator=(const ring& other) = default;
-	ring& operator=(ring&& other) = default;
+	ring& operator=(const ring& other) {
+		if (mElements != nullptr) ALLOCATOR_TRAITS::deallocate(mAllocator, mElements, MEMORY_SIZE);
+		mAllocator = other.mAllocator;
+		mConstructedSize = other.mConstructedSize;
+		mFirstElementIndex = other.mFirstElementIndex;
+		mElements = ALLOCATOR_TRAITS::allocate(mAllocator, MEMORY_SIZE);
+		memcpy(mElements, other.mElements, mConstructedSize * sizeof(T));
+		return *this;
+	}
+	ring& operator=(ring&& other) {
+		if (mElements != nullptr) ALLOCATOR_TRAITS::deallocate(mAllocator, mElements, MEMORY_SIZE);
+		mAllocator = other.mAllocator;
+		mConstructedSize = other.mConstructedSize;
+		mFirstElementIndex = other.mFirstElementIndex;
+		{
+			//swap pointers.
+			mElements = other.mElements;
+			other.mElements = nullptr;
+		}
+		return *this;
+	}
 	
 //element access:
 	reference at(size_type index) {
@@ -168,9 +211,9 @@ private:
 	allocator_type mAllocator;
 	size_type mFirstElementIndex = 0;
 	size_type mConstructedSize = 0;
-	T* mElements;
+	pointer mElements;
 	
-	constexpr T* getPointerToElementAtMemoryIndex(size_type memoryIndex) {
+	constexpr pointer getPointerToElementAtMemoryIndex(size_type memoryIndex) {
 		return mElements + memoryIndex;
 	}
 	constexpr bool full() const {
@@ -192,7 +235,6 @@ private:
 */
 		size_type relativeIndex = getFirstElementIndex() + clientIndex; // 7 or 4.
 		if (relativeIndex >= S) relativeIndex -= S; //2 or 4.  good.
-		//std::cout << "client Index = " << clientIndex << ", relativeIndex= " << relativeIndex << std::endl;
 		return relativeIndex;
 	}
 

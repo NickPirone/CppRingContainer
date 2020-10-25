@@ -20,7 +20,7 @@ template<typename T> void fillRing(T& ring, int count) {
 	}
 }
 
-template<typename T> int testIterator(T& ring) {
+template<typename T> int testIterator(const T& ring) {
 	int successes = 0;
 	for (auto iter = ring.begin(); iter != ring.end(); iter++) {
 		auto val = *iter;
@@ -66,12 +66,52 @@ void testOverFilled() {
 	assert(iterLoops == 5);
 }
 
+void testMoveCtor() {
+	np::ring<int, 5> fiveRing;
+	fillRing(fiveRing, 5);
+	int countIterations = testIterator(std::move(fiveRing));
+	assert(countIterations == 5);
+}
+
+void testCopyCtor() {
+	np::ring<int,5> fiveRing;
+	fillRing(fiveRing, 5);
+	np::ring<int,5> otherFiveRing = fiveRing;
+	assert(otherFiveRing.at(0) == 0);
+	assert(otherFiveRing.at(1) == 1);
+	assert(otherFiveRing.at(2) == 2);
+	assert(otherFiveRing.at(3) == 3);
+	assert(otherFiveRing.at(4) == 4);
+}
+
+void testAssignment() {
+	np::ring<int,5> fiveRing;
+	fillRing(fiveRing, 5);
+	np::ring<int,5> otherFiveRing;
+	otherFiveRing = fiveRing;
+	assert(otherFiveRing.at(0) == 0);
+	assert(otherFiveRing.at(1) == 1);
+	assert(otherFiveRing.at(2) == 2);
+	assert(otherFiveRing.at(3) == 3);
+	assert(otherFiveRing.at(4) == 4);
+}
+
 int main() {
-	testConstructEmpty();
 	testBadParameters();
+	testConstructEmpty();
+	std::cout << "Empty ring OK." << std::endl;
 	testPartiallyFilled();
+	std::cout << "Partially-filled ring OK." << std::endl;
 	testFullyFilled();
+	std::cout << "Fully-filled ring OK." << std::endl;
 	testOverFilled();
-	std::cout << "Tests run succesfully." << std::endl;
+	std::cout << "Over-filled ring OK." << std::endl;
+	testCopyCtor();
+	std::cout << "Copy Ctor OK." << std::endl;
+	testMoveCtor();
+	std::cout << "Move Ctor OK." << std::endl;
+	testAssignment();
+	std::cout << "Assignment OK." << std::endl;
+	std::cout << std::endl << "------ALL Tests run succesfully :) :) :)------" << std::endl;
 	return 0;
 }
