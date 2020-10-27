@@ -1,6 +1,7 @@
 #include "../ring/ring.hpp"
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 
 void testConstructEmpty() {
 	np::ring<int,5 > fiveRing;
@@ -96,6 +97,21 @@ void testAssignment() {
 	assert(otherFiveRing.at(4) == 4);
 }
 
+void testSorting() {
+	np::ring<int,5> fiveRing;
+	fiveRing.push(5);
+	fiveRing.push(1);
+	fiveRing.push(3);
+	fiveRing.push(2);
+	fiveRing.push(4);
+	std::sort(fiveRing.begin(), fiveRing.end());
+	assert(fiveRing.at(0) == 1);
+	assert(fiveRing.at(1) == 2);
+	assert(fiveRing.at(2) == 3);
+	assert(fiveRing.at(3) == 4);
+	assert(fiveRing.at(4) == 5);
+}
+
 int main() {
 	testBadParameters();
 	testConstructEmpty();
@@ -112,6 +128,8 @@ int main() {
 	std::cout << "Move Ctor OK." << std::endl;
 	testAssignment();
 	std::cout << "Assignment OK." << std::endl;
+	testSorting();
+	std::cout << "Sorting OK." << std::endl;
 	std::cout << std::endl << "------ALL Tests run succesfully :) :) :)------" << std::endl;
 	return 0;
 }

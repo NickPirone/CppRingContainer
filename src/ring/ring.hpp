@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <cstring>
-#include <iostream>
 
 namespace np {
 
@@ -51,10 +50,16 @@ public:
 			return *this;
 		}
 		iterator operator+(size_type val) const {
-			return iterator(mData, mIndex + val);
+			return iterator(mData, mStartIndex, mIndex + val);
+		}
+		iterator operator+(const iterator& rhs) const {
+			return iterator(mData, mStartIndex, mIndex + rhs.mIndex);
 		}
 		iterator operator-(size_type val) const {
-			return iterator(mData, mIndex - val);
+			return iterator(mData, mStartIndex, mIndex - val);
+		}
+		iterator operator-(const iterator& rhs) const {
+			return iterator(mData, mStartIndex, mIndex - rhs.mIndex);
 		}
 		reference operator*() {
 			return (mStartIndex + mIndex < S) ? mData[mIndex] : mData[mStartIndex + mIndex - S];
@@ -67,6 +72,9 @@ public:
 		}
 		bool operator!=(const iterator& rhs) const {
 			return !operator==(rhs);
+		}
+		operator size_type() const {
+			return mIndex;
 		}
 		
 	private:
