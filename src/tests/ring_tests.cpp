@@ -7,6 +7,7 @@ void testConstructEmpty() {
 	np::ring<int,5 > fiveRing;
 	assert(fiveRing.empty());
 	assert(fiveRing.size() == 0);
+	std::cout << "Empty ring OK." << std::endl;
 }
 
 void testBadParameters() {
@@ -41,6 +42,7 @@ void testPartiallyFilled() {
 	assert(fiveRing.at(2) == 2);
 	int iterLoops = testIterator(fiveRing);
 	assert(iterLoops == 3);
+	std::cout << "Partially-filled ring OK." << std::endl;
 }
 
 void testFullyFilled() {
@@ -53,6 +55,7 @@ void testFullyFilled() {
 	assert(fiveRing.at(4) == 4);
 	int iterLoops = testIterator(fiveRing);
 	assert(iterLoops == 5);
+	std::cout << "Fully-filled ring OK." << std::endl;
 }
 
 void testOverFilled() {
@@ -65,13 +68,16 @@ void testOverFilled() {
 	assert(fiveRing.at(4) == 5);
 	int iterLoops = testIterator(fiveRing);
 	assert(iterLoops == 5);
+	std::cout << "Over-filled ring OK." << std::endl;
 }
 
 void testMoveCtor() {
 	np::ring<int, 5> fiveRing;
 	fillRing(fiveRing, 5);
-	int countIterations = testIterator(std::move(fiveRing));
+	np::ring<int, 5> otherFiveRing(std::move(fiveRing));
+	int countIterations = testIterator(otherFiveRing);
 	assert(countIterations == 5);
+	std::cout << "Move Ctor OK." << std::endl;
 }
 
 void testCopyCtor() {
@@ -83,6 +89,7 @@ void testCopyCtor() {
 	assert(otherFiveRing.at(2) == 2);
 	assert(otherFiveRing.at(3) == 3);
 	assert(otherFiveRing.at(4) == 4);
+	std::cout << "Copy Ctor OK." << std::endl;
 }
 
 void testAssignment() {
@@ -95,6 +102,7 @@ void testAssignment() {
 	assert(otherFiveRing.at(2) == 2);
 	assert(otherFiveRing.at(3) == 3);
 	assert(otherFiveRing.at(4) == 4);
+	std::cout << "Assignment OK." << std::endl;
 }
 
 void testSorting() {
@@ -110,26 +118,40 @@ void testSorting() {
 	assert(fiveRing.at(2) == 3);
 	assert(fiveRing.at(3) == 4);
 	assert(fiveRing.at(4) == 5);
+	std::cout << "Sorting OK." << std::endl;
+}
+
+void testUserDefinedClass() {
+	class UserDefined {
+		public:
+			UserDefined(int x, int y) : mX(x), mY(y) {}
+			int mX;
+			int mY;
+	};
+	np::ring<UserDefined, 5> userDefinedRing;
+	for (int i = 0; i < 6; i++) { 
+		userDefinedRing.push({i, i}); 
+	}
+	for (int i = 0; i < 5; i++) {
+		const auto& ref = userDefinedRing.at(i);
+		assert(ref.mX == i + 1);
+		assert(ref.mY == i + 1);
+	}
+	std::cout << "User Defined Types OK." << std::endl;
 }
 
 int main() {
 	testBadParameters();
 	testConstructEmpty();
-	std::cout << "Empty ring OK." << std::endl;
 	testPartiallyFilled();
-	std::cout << "Partially-filled ring OK." << std::endl;
 	testFullyFilled();
-	std::cout << "Fully-filled ring OK." << std::endl;
 	testOverFilled();
-	std::cout << "Over-filled ring OK." << std::endl;
 	testCopyCtor();
-	std::cout << "Copy Ctor OK." << std::endl;
 	testMoveCtor();
-	std::cout << "Move Ctor OK." << std::endl;
 	testAssignment();
-	std::cout << "Assignment OK." << std::endl;
 	testSorting();
-	std::cout << "Sorting OK." << std::endl;
+	testUserDefinedClass();
+	
 	std::cout << std::endl << "------ALL Tests run succesfully :) :) :)------" << std::endl;
 	return 0;
 }
